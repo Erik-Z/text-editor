@@ -1,10 +1,17 @@
 mod constants;
 
-use std::time::Duration;
-use std::iter::FromIterator;
 use sdl2::{
-    self, event::Event, keyboard::Keycode, pixels::Color, rect::Rect, render::{TextureQuery, Canvas}, ttf::Sdl2TtfContext, video::Window,
+    self,
+    event::Event,
+    keyboard::Keycode,
+    pixels::Color,
+    rect::Rect,
+    render::{Canvas, TextureQuery, TextureCreator},
+    ttf::{Sdl2TtfContext, Font},
+    video::{Window, WindowContext},
 };
+use std::iter::FromIterator;
+use std::time::Duration;
 
 pub fn main() {
     let sdl_context = sdl2::init().unwrap();
@@ -24,7 +31,13 @@ pub fn main() {
         .build()
         .expect("Failed to build canvas");
 
+    let font_size = 20;
+    let font = ttf_context
+        .load_font(constants::FONT_PATH, font_size)
+        .expect("Failed to load font.");
+
     let mut buffer = Vec::<char>::new();
+    let mut cursor = 0;
 
     canvas.set_draw_color(Color::RGB(0, 0, 0));
     canvas.clear();
@@ -40,8 +53,27 @@ pub fn main() {
                     keycode: Some(Keycode::Escape),
                     ..
                 } => break 'running,
-                Event::TextInput { timestamp: _, window_id: _, text } => {
+                Event::KeyDown {
+                    keycode: Some(Keycode::Return),
+                    ..
+                } => {
+                    if buffer.len() > 0 {
+                        buffer.push('\n');
+                    }
+                }
+                Event::KeyDown {
+                    keycode: Some(Keycode::Backspace),
+                    ..
+                } => {
+                    buffer.pop();
+                }
+                Event::TextInput {
+                    timestamp: _,
+                    window_id: _,
+                    text,
+                } => {
                     buffer.push(text.chars().next().unwrap());
+                    // println!("{}", text);
                 }
                 _ => {}
             }
@@ -50,23 +82,26 @@ pub fn main() {
         canvas.set_draw_color(Color::RGB(0, 0, 0));
         canvas.clear();
 
-        render_text(&mut canvas, &ttf_context, 20, &String::from_iter(buffer.clone()));
+        render_text(
+            &mut canvas,
+            &font,
+            &String::from_iter(buffer.clone()),
+        );
 
         canvas.present();
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
 }
 
-fn render_text(canvas: &mut Canvas<Window>, ttf_context: &Sdl2TtfContext, font_size: u16, text: &str) {
-    let texture_creator = canvas.texture_creator();
-    let font_size = font_size;
-    let font = ttf_context
-        .load_font(constants::FONT_PATH, font_size)
-        .expect("Failed to load font.");
+fn render_text(
+    canvas: &mut Canvas<Window>,
+    font: &Font,
+    text: &str,
+) {
     let text_surface;
     if text.len() == 0 {
         text_surface = font
-            .render(" ")
+            .render("Hello\r\nWorld!")
             .blended(Color::WHITE)
             .expect("Failed to render font.");
     } else {
@@ -75,8 +110,8 @@ fn render_text(canvas: &mut Canvas<Window>, ttf_context: &Sdl2TtfContext, font_s
             .blended(Color::WHITE)
             .expect("Failed to render font.");
     }
-   
 
+    let texture_creator = canvas.texture_creator();
     let text_texture = texture_creator
         .create_texture_from_surface(&text_surface)
         .unwrap();
