@@ -1,5 +1,5 @@
 mod constants;
-
+mod gap_buffer;
 use sdl2::{
     self,
     event::Event,
@@ -10,7 +10,6 @@ use sdl2::{
     ttf::{Sdl2TtfContext, Font},
     video::{Window, WindowContext},
 };
-use std::iter::FromIterator;
 use std::time::Duration;
 
 pub fn main() {
@@ -36,7 +35,7 @@ pub fn main() {
         .load_font(constants::FONT_PATH, font_size)
         .expect("Failed to load font.");
 
-    let mut buffer = Vec::<char>::new();
+    let mut buffer = gap_buffer::GapBuffer::new(1024);
     let mut cursor = 0;
 
     canvas.set_draw_color(Color::RGB(0, 0, 0));
@@ -57,22 +56,22 @@ pub fn main() {
                     keycode: Some(Keycode::Return),
                     ..
                 } => {
-                    if buffer.len() > 0 {
-                        buffer.push('\n');
+                    if buffer.length() > 0 {
+                        buffer.insert('\n');
                     }
                 }
                 Event::KeyDown {
                     keycode: Some(Keycode::Backspace),
                     ..
                 } => {
-                    buffer.pop();
+                    buffer.remove();
                 }
                 Event::TextInput {
                     timestamp: _,
                     window_id: _,
                     text,
                 } => {
-                    buffer.push(text.chars().next().unwrap());
+                    buffer.insert(text.chars().next().unwrap());
                     // println!("{}", text);
                 }
                 _ => {}
@@ -85,7 +84,7 @@ pub fn main() {
         render_text(
             &mut canvas,
             &font,
-            &String::from_iter(buffer.clone()),
+            &buffer.to_string(),
         );
 
         canvas.present();
