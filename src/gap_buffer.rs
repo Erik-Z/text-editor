@@ -38,7 +38,18 @@ impl GapBuffer {
     }
 
     pub fn move_cursor(&mut self, new_cursor: usize) {
-        assert!(new_cursor <= self.gap_start);
+        if new_cursor > self.length(){
+            return;
+        }
+
+        if self.cursor < self.gap_start {
+            self.cursor += 1;
+        } else if self.cursor < self.buffer.len() - (self.gap_end - self.gap_start) {
+            self.cursor += 1;
+            self.gap_start += 1;
+            self.buffer.swap(self.gap_start - 1, self.gap_end);
+            self.gap_end += 1;
+        }
 
         if new_cursor < self.cursor {
             self.buffer.copy_within(new_cursor..self.cursor, new_cursor + self.gap_end - self.gap_start);
@@ -65,6 +76,10 @@ impl GapBuffer {
 
     pub fn length(&self) -> usize {
         self.buffer.len() - (self.gap_end - self.gap_start)
+    }
+
+    pub fn get_cursor(&self) -> usize {
+        self.cursor
     }
 
     pub fn to_string(&self) -> String {
