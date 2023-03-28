@@ -8,7 +8,7 @@ use sdl2::{
     rect::Rect,
     render::{Canvas, TextureQuery, TextureCreator},
     ttf::{Sdl2TtfContext, Font},
-    video::{Window, WindowContext},
+    video::{Window, WindowContext}, mouse::Cursor,
 };
 use std::time::Duration;
 
@@ -36,7 +36,6 @@ pub fn main() {
         .expect("Failed to load font.");
 
     let mut buffer = gap_buffer::GapBuffer::new(1024);
-    let mut cursor = 0;
 
     canvas.set_draw_color(Color::RGB(0, 0, 0));
     canvas.clear();
@@ -66,6 +65,18 @@ pub fn main() {
                 } => {
                     buffer.remove();
                 }
+                Event::KeyDown {
+                    keycode: Some(Keycode::Left),
+                    ..
+                } => {
+                    buffer.move_cursor(buffer.get_cursor() - 1);
+                }
+                Event::KeyDown {
+                    keycode: Some(Keycode::Right),
+                    ..
+                } => {
+                    buffer.move_cursor(buffer.get_cursor() + 1);
+                }
                 Event::TextInput {
                     timestamp: _,
                     window_id: _,
@@ -87,6 +98,9 @@ pub fn main() {
             &buffer.to_string(),
         );
 
+        let (cursor_x, cursor_y) = get_cursor_position(&font, &buffer.to_string(), buffer.get_cursor());
+        render_cursor(&mut canvas, &font, cursor_x, cursor_y);
+
         canvas.present();
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
@@ -100,7 +114,7 @@ fn render_text(
     let text_surface;
     if text.len() == 0 {
         text_surface = font
-            .render("Hello\r\nWorld!")
+            .render(" ")
             .blended(Color::WHITE)
             .expect("Failed to render font.");
     } else {
@@ -123,3 +137,19 @@ fn render_text(
     let dst = Rect::new(x as i32, y as i32, width, height);
     canvas.copy(&text_texture, None, Some(dst)).unwrap();
 }
+
+fn render_cursor(canvas: &mut Canvas<Window>, font: &Font, cursor_x: i32, cursor_y: i32){
+    let cursor_width = 1;
+    let cursor_height = font.height();
+
+    let cursor_rect = Rect::new(cursor_x, cursor_y, cursor_width, cursor_height.try_into().unwrap());
+    canvas.set_draw_color(Color::WHITE);
+    canvas.fill_rect(cursor_rect);
+}
+
+fn get_cursor_position(font: &Font, text: &str, cursor_index: usize) -> (i32, i32){
+    let (left, _) = text.split_at(cursor_index);
+    let cursor_x = font.size_of(left).unwrap().0;
+    (cursor_x.try_into().unwrap(), 0)
+}
+
