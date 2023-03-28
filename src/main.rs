@@ -4,11 +4,12 @@ use sdl2::{
     self,
     event::Event,
     keyboard::Keycode,
+    mouse::Cursor,
     pixels::Color,
     rect::Rect,
-    render::{Canvas, TextureQuery, TextureCreator},
-    ttf::{Sdl2TtfContext, Font},
-    video::{Window, WindowContext}, mouse::Cursor,
+    render::{Canvas, TextureCreator, TextureQuery},
+    ttf::{Font, Sdl2TtfContext},
+    video::{Window, WindowContext},
 };
 use std::time::Duration;
 
@@ -92,13 +93,10 @@ pub fn main() {
         canvas.set_draw_color(Color::RGB(0, 0, 0));
         canvas.clear();
 
-        render_text(
-            &mut canvas,
-            &font,
-            &buffer.to_string(),
-        );
+        render_text(&mut canvas, &font, &buffer.to_string());
 
-        let (cursor_x, cursor_y) = get_cursor_position(&font, &buffer.to_string(), buffer.get_cursor());
+        let (cursor_x, cursor_y) =
+            get_cursor_position(&font, &buffer.to_string(), buffer.get_cursor());
         render_cursor(&mut canvas, &font, cursor_x, cursor_y);
 
         canvas.present();
@@ -106,11 +104,7 @@ pub fn main() {
     }
 }
 
-fn render_text(
-    canvas: &mut Canvas<Window>,
-    font: &Font,
-    text: &str,
-) {
+fn render_text(canvas: &mut Canvas<Window>, font: &Font, text: &str) {
     let text_surface;
     if text.len() == 0 {
         text_surface = font
@@ -138,18 +132,22 @@ fn render_text(
     canvas.copy(&text_texture, None, Some(dst)).unwrap();
 }
 
-fn render_cursor(canvas: &mut Canvas<Window>, font: &Font, cursor_x: i32, cursor_y: i32){
+fn render_cursor(canvas: &mut Canvas<Window>, font: &Font, cursor_x: i32, cursor_y: i32) {
     let cursor_width = 1;
     let cursor_height = font.height();
 
-    let cursor_rect = Rect::new(cursor_x, cursor_y, cursor_width, cursor_height.try_into().unwrap());
+    let cursor_rect = Rect::new(
+        cursor_x,
+        cursor_y,
+        cursor_width,
+        cursor_height.try_into().unwrap(),
+    );
     canvas.set_draw_color(Color::WHITE);
-    canvas.fill_rect(cursor_rect);
+    canvas.fill_rect(cursor_rect).expect("Failed to render cursor");
 }
 
-fn get_cursor_position(font: &Font, text: &str, cursor_index: usize) -> (i32, i32){
+fn get_cursor_position(font: &Font, text: &str, cursor_index: usize) -> (i32, i32) {
     let (left, _) = text.split_at(cursor_index);
     let cursor_x = font.size_of(left).unwrap().0;
     (cursor_x.try_into().unwrap(), 0)
 }
-

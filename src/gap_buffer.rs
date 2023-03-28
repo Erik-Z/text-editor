@@ -38,7 +38,7 @@ impl GapBuffer {
     }
 
     pub fn move_cursor(&mut self, new_cursor: usize) {
-        if new_cursor > self.length(){
+        if new_cursor > self.length() {
             return;
         }
 
@@ -52,11 +52,17 @@ impl GapBuffer {
         }
 
         if new_cursor < self.cursor {
-            self.buffer.copy_within(new_cursor..self.cursor, new_cursor + self.gap_end - self.gap_start);
+            self.buffer.copy_within(
+                new_cursor..self.cursor,
+                new_cursor + self.gap_end - self.gap_start,
+            );
             self.gap_end -= self.cursor - new_cursor;
             self.gap_start = new_cursor;
         } else if new_cursor > self.cursor {
-            self.buffer.copy_within(self.cursor + self.gap_end - self.gap_start..new_cursor, self.cursor);
+            self.buffer.copy_within(
+                self.cursor + self.gap_end - self.gap_start..new_cursor,
+                self.cursor,
+            );
             self.gap_start += new_cursor - self.cursor;
             self.gap_end += new_cursor - self.cursor;
         }
@@ -67,7 +73,8 @@ impl GapBuffer {
         let new_capacity = self.buffer.len() * 2;
         let mut new_buffer = vec![' '; new_capacity];
         new_buffer[..self.gap_start].copy_from_slice(&self.buffer[..self.gap_start]);
-        new_buffer[new_capacity - (self.buffer.len() - self.gap_end)..].copy_from_slice(&self.buffer[self.gap_end..]);
+        new_buffer[new_capacity - (self.buffer.len() - self.gap_end)..]
+            .copy_from_slice(&self.buffer[self.gap_end..]);
 
         let gap_size = new_capacity - self.buffer.len() + self.gap_end - self.gap_start;
         self.gap_end = self.gap_start + gap_size;
