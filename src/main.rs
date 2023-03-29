@@ -78,6 +78,14 @@ pub fn main() {
                 } => {
                     buffer.move_cursor(buffer.get_cursor() + 1);
                 }
+                Event::KeyDown {
+                    keycode: Some(Keycode::Tab),
+                    ..
+                } => {
+                    for _ in 0..settings::tab_width {
+                        buffer.insert(' ');
+                    }
+                }
                 Event::TextInput {
                     timestamp: _,
                     window_id: _,
