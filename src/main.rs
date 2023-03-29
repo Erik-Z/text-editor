@@ -1,6 +1,7 @@
 mod constants;
 mod gap_buffer;
 mod rendering;
+mod settings;
 use rendering::{render_text, get_cursor_position, render_cursor};
 use sdl2::{
     self,
