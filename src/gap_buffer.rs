@@ -41,32 +41,30 @@ impl GapBuffer {
         if new_cursor > self.length() {
             return;
         }
-
-        if self.cursor < self.gap_start {
-            self.cursor += 1;
-        } else if self.cursor < self.buffer.len() - (self.gap_end - self.gap_start) {
-            self.cursor += 1;
-            self.gap_start += 1;
-            self.buffer.swap(self.gap_start - 1, self.gap_end);
-            self.gap_end += 1;
-        }
-
-        if new_cursor < self.cursor {
+    
+        let shift = (new_cursor as isize) - (self.cursor as isize);
+    
+        if shift < 0 {
+            // Shift the cursor to the left
+            let shift_abs = shift.abs() as usize;
             self.buffer.copy_within(
-                new_cursor..self.cursor,
-                new_cursor + self.gap_end - self.gap_start,
+                (self.gap_start - shift_abs)..self.gap_start,
+                self.gap_end - shift_abs,
             );
-            self.gap_end -= self.cursor - new_cursor;
-            self.gap_start = new_cursor;
-        } else if new_cursor > self.cursor {
+            self.gap_start -= shift_abs;
+            self.gap_end -= shift_abs;
+            self.cursor -= shift_abs;
+        } else if shift > 0 {
+            // Shift the cursor to the right
+            let shift_abs = shift as usize;
             self.buffer.copy_within(
-                self.cursor + self.gap_end - self.gap_start..new_cursor,
-                self.cursor,
+                self.gap_end..(self.gap_end + shift_abs),
+                self.gap_start,
             );
-            self.gap_start += new_cursor - self.cursor;
-            self.gap_end += new_cursor - self.cursor;
+            self.gap_start += shift_abs;
+            self.gap_end += shift_abs;
+            self.cursor += shift_abs;
         }
-        self.cursor = new_cursor;
     }
 
     fn resize(&mut self) {
