@@ -6,7 +6,6 @@ use sdl2::{
     ttf::{Font},
     video::{Window},
 };
-use crate::settings;
 
 pub fn render_text(canvas: &mut Canvas<Window>, font: &Font, text: &str) {
     let lines: Vec<&str> = text.split('\n').collect();
@@ -43,7 +42,8 @@ pub fn render_text(canvas: &mut Canvas<Window>, font: &Font, text: &str) {
     }    
 }
 
-pub fn render_cursor(canvas: &mut Canvas<Window>, font: &Font, cursor_x: i32, cursor_y: i32) {
+pub fn render_cursor(canvas: &mut Canvas<Window>, font: &Font, cursor_x: i32, cursor_y: i32, cursor_visible: bool) {
+    if !cursor_visible { return }
     let cursor_width = 1;
     let cursor_height = font.height();
 

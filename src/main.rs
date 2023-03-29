@@ -9,7 +9,7 @@ use sdl2::{
     keyboard::Keycode,
     pixels::Color,
 };
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 pub fn main() {
     let sdl_context = sdl2::init().unwrap();
@@ -42,6 +42,8 @@ pub fn main() {
 
     let mut event_pump = sdl_context.event_pump().unwrap();
 
+    let mut cursor_visible = true;
+    let mut last_cursor_blink = Instant::now();
     'running: loop {
         for event in event_pump.poll_iter() {
             match event {
@@ -98,6 +100,13 @@ pub fn main() {
             }
         }
         // The rest of the game loop goes here...
+
+        // Keeps track of cursor blinking
+        if last_cursor_blink.elapsed() >= Duration::from_millis(constants::CURSOR_BLINK_DURATION) {
+            cursor_visible = !cursor_visible;
+            last_cursor_blink = Instant::now();
+        }
+
         canvas.set_draw_color(Color::RGB(0, 0, 0));
         canvas.clear();
 
@@ -105,7 +114,7 @@ pub fn main() {
 
         let (cursor_x, cursor_y) =
             get_cursor_position(&font, &buffer.to_string(), buffer.get_cursor());
-        render_cursor(&mut canvas, &font, cursor_x, cursor_y);
+        render_cursor(&mut canvas, &font, cursor_x, cursor_y, cursor_visible);
 
         canvas.present();
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
