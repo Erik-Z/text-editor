@@ -7,9 +7,18 @@ use sdl2::{
     video::Window,
 };
 
-pub fn render_text(canvas: &mut Canvas<Window>, font: &Font, text: &str) {
+use crate::settings;
+
+pub fn render_text(canvas: &mut Canvas<Window>, font: &Font, text: &str, scroll_x: i32, scroll_y: i32) {
     // let lines: Vec<&str> = text.split('\n').collect();
-    let lines = text.lines();
+    let lines;
+    if !settings::debug_mode {
+        let mut chars = text.chars();
+        chars.next_back();
+        lines = chars.as_str().lines();
+    } else {
+        lines = text.lines();
+    }
     let mut y_offset = 0;
 
     for line in lines {
@@ -33,8 +42,8 @@ pub fn render_text(canvas: &mut Canvas<Window>, font: &Font, text: &str) {
 
         let TextureQuery { width, height, .. } = text_texture.query();
 
-        let x = 0;
-        let y = 0 + y_offset;
+        let x = 0 - scroll_x;
+        let y = 0 - scroll_y + y_offset;
 
         let dst = Rect::new(x as i32, y as i32, width, height);
         canvas.copy(&text_texture, None, Some(dst)).unwrap();
@@ -49,6 +58,8 @@ pub fn render_cursor(
     cursor_x: i32,
     cursor_y: i32,
     cursor_visible: bool,
+    scroll_x: i32,
+    scroll_y: i32
 ) {
     if !cursor_visible {
         return;
@@ -57,8 +68,8 @@ pub fn render_cursor(
     let cursor_height = font.height();
 
     let cursor_rect = Rect::new(
-        cursor_x,
-        cursor_y,
+        cursor_x - scroll_x,
+        cursor_y - scroll_y,
         cursor_width,
         cursor_height.try_into().unwrap(),
     );

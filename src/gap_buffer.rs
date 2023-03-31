@@ -31,7 +31,7 @@ impl GapBuffer {
     }
 
     pub fn remove(&mut self) -> Option<char> {
-        if self.cursor == 0 || self.cursor == self.length() - 1 {
+        if self.cursor == 0 {
             return None;
         } else {
             self.cursor -= 1;
@@ -44,6 +44,10 @@ impl GapBuffer {
 
     pub fn move_cursor(&mut self, new_cursor: usize) {
         if new_cursor > self.length() - 1 {
+            return;
+        }
+        
+        if new_cursor == self.cursor{
             return;
         }
 

@@ -3,8 +3,14 @@ mod gap_buffer;
 mod rendering;
 mod settings;
 use rendering::{get_cursor_position, render_cursor, render_text};
-use sdl2::{self, event::Event, keyboard::Keycode, pixels::Color};
+use sdl2::{self, event::Event, keyboard::Keycode, pixels::Color, rect::Rect};
 use std::time::{Duration, Instant};
+
+//TODO: Implement Delete Method
+//TODO: Implement Insert Mode
+//TODO: Implement Copy and Paste
+//TODO: Implement loading and saving a file.
+//TODO: Implement changing font size
 
 pub fn main() {
     let sdl_context = sdl2::init().unwrap();
@@ -23,13 +29,17 @@ pub fn main() {
         .into_canvas()
         .build()
         .expect("Failed to build canvas");
-
-    let font_size = 20;
+    
     let font = ttf_context
-        .load_font(constants::FONT_PATH, font_size)
+        .load_font(constants::FONT_PATH, settings::font_size)
         .expect("Failed to load font.");
 
     let mut buffer = gap_buffer::GapBuffer::new(1024);
+
+    let viewport_width = 800;
+    let viewport_height = 600;
+    let viewport = Rect::new(0, 0, viewport_width, viewport_height);
+    canvas.set_viewport(Some(viewport));
 
     canvas.set_draw_color(Color::RGB(0, 0, 0));
     canvas.clear();
@@ -39,6 +49,9 @@ pub fn main() {
 
     let mut cursor_visible = true;
     let mut last_cursor_blink = Instant::now();
+    let mut scroll_x: i32 = 0;
+    let mut scroll_y: i32 = 0;
+
     'running: loop {
         for event in event_pump.poll_iter() {
             match event {
@@ -57,6 +70,12 @@ pub fn main() {
                 }
                 Event::KeyDown {
                     keycode: Some(Keycode::Backspace),
+                    ..
+                } => {
+                    buffer.remove();
+                }
+                Event::KeyDown {
+                    keycode: Some(Keycode::Delete),
                     ..
                 } => {
                     buffer.remove();
@@ -142,6 +161,12 @@ pub fn main() {
                         buffer.insert(' ');
                     }
                 }
+                Event::MouseWheel { y, .. } => {
+                    scroll_y += y * -10;
+                    if scroll_y < 0 {
+                        scroll_y = 0;
+                    }
+                }
                 Event::TextInput {
                     timestamp: _,
                     window_id: _,
@@ -164,11 +189,11 @@ pub fn main() {
         canvas.set_draw_color(Color::RGB(0, 0, 0));
         canvas.clear();
 
-        render_text(&mut canvas, &font, &buffer.to_string());
+        render_text(&mut canvas, &font, &buffer.to_string(), scroll_x, scroll_y);
 
         let (cursor_x, cursor_y) =
             get_cursor_position(&font, &buffer.to_string(), buffer.get_cursor());
-        render_cursor(&mut canvas, &font, cursor_x, cursor_y, cursor_visible);
+        render_cursor(&mut canvas, &font, cursor_x, cursor_y, cursor_visible, scroll_x, scroll_y);
 
         canvas.present();
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
