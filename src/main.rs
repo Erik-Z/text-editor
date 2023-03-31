@@ -3,7 +3,7 @@ mod gap_buffer;
 mod rendering;
 mod settings;
 use rendering::{get_cursor_position, render_cursor, render_text};
-use sdl2::{self, event::Event, keyboard::Keycode, pixels::Color, rect::Rect};
+use sdl2::{self, event::{Event, WindowEvent}, keyboard::Keycode, pixels::Color, rect::Rect};
 use std::time::{Duration, Instant};
 
 //TODO: Implement Delete Method
@@ -22,6 +22,7 @@ pub fn main() {
     let window = video_subsystem
         .window("Text Editor", 800, 600)
         .position_centered()
+        .resizable()
         .build()
         .expect("Failed to build window");
 
@@ -36,9 +37,9 @@ pub fn main() {
 
     let mut buffer = gap_buffer::GapBuffer::new(1024);
 
-    let viewport_width = 800;
-    let viewport_height = 600;
-    let viewport = Rect::new(0, 0, viewport_width, viewport_height);
+    let mut viewport_width = 800;
+    let mut viewport_height = 600;
+    let mut viewport = Rect::new(0, 0, viewport_width, viewport_height);
     canvas.set_viewport(Some(viewport));
 
     canvas.set_draw_color(Color::RGB(0, 0, 0));
@@ -55,6 +56,15 @@ pub fn main() {
     'running: loop {
         for event in event_pump.poll_iter() {
             match event {
+                Event::Window { win_event, .. } => match win_event {
+                    WindowEvent::Resized(w, h) => {
+                        viewport_width = w as u32;
+                        viewport_height = h as u32;
+                        viewport = Rect::new(0, 0, viewport_width, viewport_height);
+                        canvas.set_viewport(Some(viewport));
+                    }
+                    _ => {}
+                },
                 Event::Quit { .. }
                 | Event::KeyDown {
                     keycode: Some(Keycode::Escape),
