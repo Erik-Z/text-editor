@@ -3,8 +3,8 @@ use sdl2::{
     pixels::Color,
     rect::Rect,
     render::{Canvas, TextureQuery},
-    ttf::{Font},
-    video::{Window},
+    ttf::Font,
+    video::Window,
 };
 
 pub fn render_text(canvas: &mut Canvas<Window>, font: &Font, text: &str) {
@@ -28,8 +28,8 @@ pub fn render_text(canvas: &mut Canvas<Window>, font: &Font, text: &str) {
 
         let texture_creator = canvas.texture_creator();
         let text_texture = texture_creator
-        .create_texture_from_surface(&text_surface)
-        .unwrap();
+            .create_texture_from_surface(&text_surface)
+            .unwrap();
 
         let TextureQuery { width, height, .. } = text_texture.query();
 
@@ -40,11 +40,19 @@ pub fn render_text(canvas: &mut Canvas<Window>, font: &Font, text: &str) {
         canvas.copy(&text_texture, None, Some(dst)).unwrap();
 
         y_offset += height as i32;
-    }    
+    }
 }
 
-pub fn render_cursor(canvas: &mut Canvas<Window>, font: &Font, cursor_x: i32, cursor_y: i32, cursor_visible: bool) {
-    if !cursor_visible { return }
+pub fn render_cursor(
+    canvas: &mut Canvas<Window>,
+    font: &Font,
+    cursor_x: i32,
+    cursor_y: i32,
+    cursor_visible: bool,
+) {
+    if !cursor_visible {
+        return;
+    }
     let cursor_width = 1;
     let cursor_height = font.height();
 
@@ -55,7 +63,9 @@ pub fn render_cursor(canvas: &mut Canvas<Window>, font: &Font, cursor_x: i32, cu
         cursor_height.try_into().unwrap(),
     );
     canvas.set_draw_color(Color::WHITE);
-    canvas.fill_rect(cursor_rect).expect("Failed to render cursor");
+    canvas
+        .fill_rect(cursor_rect)
+        .expect("Failed to render cursor");
 }
 
 pub fn get_cursor_position(font: &Font, text: &str, cursor_index: usize) -> (i32, i32) {
@@ -63,7 +73,7 @@ pub fn get_cursor_position(font: &Font, text: &str, cursor_index: usize) -> (i32
     let mut cursor_x = 0;
     let mut cursor_y = 0;
     let mut current_index = 0;
-    
+
     for line in lines {
         if current_index + line.chars().count() >= cursor_index {
             let (left, _) = text.split_at(cursor_index - current_index);

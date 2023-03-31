@@ -43,12 +43,12 @@ impl GapBuffer {
     }
 
     pub fn move_cursor(&mut self, new_cursor: usize) {
-        if new_cursor > self.length() - 1{
+        if new_cursor > self.length() - 1 {
             return;
         }
-    
+
         let shift = (new_cursor as isize) - (self.cursor as isize);
-    
+
         if shift < 0 {
             // Shift the cursor to the left
             let shift_abs = shift.abs() as usize;
@@ -62,10 +62,8 @@ impl GapBuffer {
         } else if shift > 0 {
             // Shift the cursor to the right
             let shift_abs = shift as usize;
-            self.buffer.copy_within(
-                self.gap_end..(self.gap_end + shift_abs),
-                self.gap_start,
-            );
+            self.buffer
+                .copy_within(self.gap_end..(self.gap_end + shift_abs), self.gap_start);
             self.gap_start += shift_abs;
             self.gap_end += shift_abs;
             self.cursor += shift_abs;
@@ -96,7 +94,7 @@ impl GapBuffer {
     pub fn get_cursor_position(&self) -> (usize, usize) {
         let mut row = 0;
         let mut col = 0;
-    
+
         for (i, c) in self.to_string().chars().enumerate() {
             if i == self.get_cursor() {
                 break;
@@ -108,7 +106,7 @@ impl GapBuffer {
                 col += 1;
             }
         }
-    
+
         (row, col)
     }
 

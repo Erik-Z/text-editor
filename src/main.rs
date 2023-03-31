@@ -2,13 +2,8 @@ mod constants;
 mod gap_buffer;
 mod rendering;
 mod settings;
-use rendering::{render_text, get_cursor_position, render_cursor};
-use sdl2::{
-    self,
-    event::Event,
-    keyboard::Keycode,
-    pixels::Color,
-};
+use rendering::{get_cursor_position, render_cursor, render_text};
+use sdl2::{self, event::Event, keyboard::Keycode, pixels::Color};
 use std::time::{Duration, Instant};
 
 pub fn main() {
@@ -70,8 +65,8 @@ pub fn main() {
                     keycode: Some(Keycode::Left),
                     ..
                 } => {
-                    if buffer.get_cursor() != 0 { 
-                        buffer.move_cursor(buffer.get_cursor() - 1); 
+                    if buffer.get_cursor() != 0 {
+                        buffer.move_cursor(buffer.get_cursor() - 1);
                     }
                 }
                 Event::KeyDown {
@@ -120,7 +115,7 @@ pub fn main() {
                         let mut new_cursor = 0;
                         let mut current_row = 0;
                         let mut current_col = 0;
-                
+
                         for (i, c) in buffer.to_string().chars().enumerate() {
                             if current_row == target_row {
                                 if current_col == col || c == '\n' || c == constants::EOF_CHAR {
@@ -135,7 +130,7 @@ pub fn main() {
                                 current_col += 1;
                             }
                         }
-                
+
                         buffer.move_cursor(new_cursor);
                     }
                 }
