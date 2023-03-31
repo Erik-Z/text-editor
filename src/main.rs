@@ -81,6 +81,65 @@ pub fn main() {
                     buffer.move_cursor(buffer.get_cursor() + 1);
                 }
                 Event::KeyDown {
+                    keycode: Some(Keycode::Up),
+                    ..
+                } => {
+                    let (row, col) = buffer.get_cursor_position();
+                    if row > 0 {
+                        // Move the cursor up a line
+                        let target_row = row - 1;
+                        let mut new_cursor = 0;
+                        let mut current_row = 0;
+                        let mut current_col = 0;
+
+                        for (i, c) in buffer.to_string().chars().enumerate() {
+                            if current_row == target_row && (current_col == col || c == '\n') {
+                                new_cursor = i;
+                                break;
+                            }
+                            if c == '\n' {
+                                current_row += 1;
+                                current_col = 0;
+                            } else {
+                                current_col += 1;
+                            }
+                        }
+
+                        buffer.move_cursor(new_cursor);
+                    }
+                }
+                Event::KeyDown {
+                    keycode: Some(Keycode::Down),
+                    ..
+                } => {
+                    let (row, col) = buffer.get_cursor_position();
+                    let total_rows = buffer.to_string().lines().count();
+                    if row < total_rows - 1 {
+                        // Move the cursor down a line
+                        let target_row = row + 1;
+                        let mut new_cursor = 0;
+                        let mut current_row = 0;
+                        let mut current_col = 0;
+                
+                        for (i, c) in buffer.to_string().chars().enumerate() {
+                            if current_row == target_row {
+                                if current_col == col || c == '\n' || c == constants::EOF_CHAR {
+                                    new_cursor = i;
+                                    break;
+                                }
+                            }
+                            if c == '\n' {
+                                current_row += 1;
+                                current_col = 0;
+                            } else {
+                                current_col += 1;
+                            }
+                        }
+                
+                        buffer.move_cursor(new_cursor);
+                    }
+                }
+                Event::KeyDown {
                     keycode: Some(Keycode::Tab),
                     ..
                 } => {

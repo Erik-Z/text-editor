@@ -8,7 +8,8 @@ use sdl2::{
 };
 
 pub fn render_text(canvas: &mut Canvas<Window>, font: &Font, text: &str) {
-    let lines: Vec<&str> = text.split('\n').collect();
+    // let lines: Vec<&str> = text.split('\n').collect();
+    let lines = text.lines();
     let mut y_offset = 0;
 
     for line in lines {

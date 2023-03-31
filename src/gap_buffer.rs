@@ -1,3 +1,5 @@
+use crate::constants::EOF_CHAR;
+
 pub struct GapBuffer {
     buffer: Vec<char>,
     gap_start: usize,
@@ -7,10 +9,13 @@ pub struct GapBuffer {
 
 impl GapBuffer {
     pub fn new(capacity: usize) -> Self {
+        let mut buffer = vec![' '; capacity];
+        buffer[capacity - 1] = EOF_CHAR;
+
         GapBuffer {
-            buffer: vec![' '; capacity],
+            buffer,
             gap_start: 0,
-            gap_end: capacity,
+            gap_end: capacity - 1,
             cursor: 0,
         }
     }
@@ -26,8 +31,8 @@ impl GapBuffer {
     }
 
     pub fn remove(&mut self) -> Option<char> {
-        if self.cursor == 0 {
-            None
+        if self.cursor == 0 || self.cursor == self.length() - 1 {
+            return None;
         } else {
             self.cursor -= 1;
             self.gap_start -= 1;
@@ -38,7 +43,7 @@ impl GapBuffer {
     }
 
     pub fn move_cursor(&mut self, new_cursor: usize) {
-        if new_cursor > self.length() {
+        if new_cursor > self.length() - 1{
             return;
         }
     
@@ -70,6 +75,7 @@ impl GapBuffer {
     fn resize(&mut self) {
         let new_capacity = self.buffer.len() * 2;
         let mut new_buffer = vec![' '; new_capacity];
+        new_buffer[new_capacity - 1] = EOF_CHAR;
         new_buffer[..self.gap_start].copy_from_slice(&self.buffer[..self.gap_start]);
         new_buffer[new_capacity - (self.buffer.len() - self.gap_end)..]
             .copy_from_slice(&self.buffer[self.gap_end..]);
@@ -85,6 +91,25 @@ impl GapBuffer {
 
     pub fn get_cursor(&self) -> usize {
         self.cursor
+    }
+
+    pub fn get_cursor_position(&self) -> (usize, usize) {
+        let mut row = 0;
+        let mut col = 0;
+    
+        for (i, c) in self.to_string().chars().enumerate() {
+            if i == self.get_cursor() {
+                break;
+            }
+            if c == '\n' {
+                row += 1;
+                col = 0;
+            } else {
+                col += 1;
+            }
+        }
+    
+        (row, col)
     }
 
     pub fn to_string(&self) -> String {
