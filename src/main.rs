@@ -13,6 +13,11 @@ use sdl2::{
     pixels::Color,
     rect::{Rect, Point},
 };
+use native_dialog::{FileDialog, MessageDialog, MessageType};
+use tinyfiledialogs as tfd;
+use std::fs::File;
+use std::io::Read;
+
 use std::time::{Duration, Instant};
 
 //TODO: Implement Delete Method
@@ -218,6 +223,41 @@ pub fn main() {
                 } => {
                     for _ in 0..settings::tab_width {
                         buffer.insert(' ');
+                    }
+                }
+                Event::KeyDown {
+                    keycode: Some(keycode),
+                    keymod,
+                    ..
+                } => {
+                    if keycode == Keycode::O && keymod.contains(sdl2::keyboard::Mod::LCTRLMOD) {
+                        let path = FileDialog::new()
+                            .set_location("~/Desktop")
+                            .add_filter("Text Documents", &["txt"])
+                            .add_filter("All Documents", &["*"])
+                            .show_open_single_file()
+                            .expect("Failed to get file path.");
+
+                        if let Some(path) = path {
+                            let mut file = match File::open(&path) {
+                                Ok(file) => file,
+                                Err(e) => {
+                                    eprintln!("Unable to open file: {:?}", e);
+                                    continue;
+                                }
+                            };
+                            let mut contents = String::new();
+                            if let Err(e) = file.read_to_string(&mut contents) {
+                                eprintln!("Unable to read file: {:?}", e);
+                                continue;
+                            }
+                
+                            // Clear the buffer and insert the file's contents
+                            buffer.clear();
+                            for c in contents.chars() {
+                                buffer.insert(c);
+                            }
+                        }
                     }
                 }
                 Event::MouseWheel { mut y, .. } => {

@@ -87,6 +87,18 @@ impl GapBuffer {
         self.buffer = new_buffer;
     }
 
+    pub fn clear(&mut self) {
+        self.gap_start = 0;
+        self.gap_end = self.buffer.len() - 1;
+        self.cursor = 0;
+
+        let buffer_len = self.buffer.len();
+        for i in 0..buffer_len - 1 {
+            self.buffer[i] = ' ';
+        }
+        self.buffer[buffer_len - 1] = EOF_CHAR;
+    }
+
     pub fn length(&self) -> usize {
         self.buffer.len() - (self.gap_end - self.gap_start)
     }
