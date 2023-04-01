@@ -7,7 +7,7 @@ use sdl2::{
     video::Window,
 };
 
-use crate::settings;
+use crate::{settings, gap_buffer::GapBuffer};
 
 pub fn render_text(canvas: &mut Canvas<Window>, font: &Font, text: &str, scroll_x: i32, scroll_y: i32) {
     // let lines: Vec<&str> = text.split('\n').collect();
@@ -95,4 +95,17 @@ pub fn get_cursor_position(font: &Font, text: &str, cursor_index: usize) -> (i32
         current_index += line.chars().count() + 1;
     }
     (cursor_x, cursor_y)
+}
+
+pub fn get_text_size(text: &str, font: &Font) -> (u32, u32) {
+    let lines = text.lines();
+    let mut text_width = 0;
+    let mut text_height = 0;
+
+    for line in lines {
+        let (line_width, line_height) = font.size_of(line).unwrap();
+        text_width = text_width.max(line_width);
+        text_height += line_height
+    }
+    (text_width, text_height)
 }

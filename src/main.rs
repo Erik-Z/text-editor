@@ -2,7 +2,7 @@ mod constants;
 mod gap_buffer;
 mod rendering;
 mod settings;
-use rendering::{get_cursor_position, render_cursor, render_text};
+use rendering::{get_cursor_position, render_cursor, render_text, get_text_size};
 use sdl2::{self, event::{Event, WindowEvent}, keyboard::Keycode, pixels::Color, rect::Rect};
 use std::time::{Duration, Instant};
 
@@ -25,6 +25,8 @@ pub fn main() {
         .resizable()
         .build()
         .expect("Failed to build window");
+
+    let (mut window_width, mut window_height) = window.size();
 
     let mut canvas = window
         .into_canvas()
@@ -52,12 +54,17 @@ pub fn main() {
     let mut last_cursor_blink = Instant::now();
     let mut scroll_x: i32 = 0;
     let mut scroll_y: i32 = 0;
+    let mut can_scroll_vertically_up = false;
+    let mut can_scroll_vertically_down = false;
+    let mut can_scroll_horizontally = false;
 
     'running: loop {
         for event in event_pump.poll_iter() {
             match event {
                 Event::Window { win_event, .. } => match win_event {
                     WindowEvent::Resized(w, h) => {
+                        window_width = w as u32;
+                        window_height = h as u32;
                         viewport_width = w as u32;
                         viewport_height = h as u32;
                         viewport = Rect::new(0, 0, viewport_width, viewport_height);
@@ -171,7 +178,13 @@ pub fn main() {
                         buffer.insert(' ');
                     }
                 }
-                Event::MouseWheel { y, .. } => {
+                Event::MouseWheel { mut y, .. } => {
+                    if !can_scroll_vertically_up {
+                        if y > 0 { y = 0 }    
+                    } 
+                    if !can_scroll_vertically_down {
+                        if y < 0 { y = 0 }
+                    }
                     scroll_y += y * -10;
                     if scroll_y < 0 {
                         scroll_y = 0;
@@ -204,6 +217,23 @@ pub fn main() {
         let (cursor_x, cursor_y) =
             get_cursor_position(&font, &buffer.to_string(), buffer.get_cursor());
         render_cursor(&mut canvas, &font, cursor_x, cursor_y, cursor_visible, scroll_x, scroll_y);
+
+        let (text_width, text_height) = get_text_size(&buffer.to_string(), &font);
+
+        let max_scroll_x = if text_width > window_width {
+            text_width - window_width
+        } else {
+            0
+        };
+        let max_scroll_y = if text_height > window_height {
+            text_height - window_height
+        } else {
+            0
+        };
+
+        can_scroll_vertically_down = text_height > viewport_height && scroll_y < max_scroll_y as i32;
+        can_scroll_vertically_up = text_height > viewport_height && scroll_y > 0;
+        can_scroll_horizontally =  text_width > viewport_width && scroll_x < max_scroll_x as i32;
 
         canvas.present();
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
