@@ -46,8 +46,8 @@ impl GapBuffer {
         if new_cursor > self.length() - 1 {
             return;
         }
-        
-        if new_cursor == self.cursor{
+
+        if new_cursor == self.cursor {
             return;
         }
 
