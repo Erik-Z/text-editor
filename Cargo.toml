@@ -7,5 +7,4 @@ edition = "2021"
 
 [dependencies]
 sdl2 = {version = "0.35.2", features = ["ttf"]}
-tinyfiledialogs = "3.9.1"
 native-dialog = "0.6.3"

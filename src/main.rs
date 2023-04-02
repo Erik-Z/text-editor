@@ -4,7 +4,7 @@ mod gap_buffer;
 mod rendering;
 mod settings;
 use rendering::{
-    get_cursor_position, get_text_size, render_cursor, render_scroll_bars, render_text,
+    get_cursor_position, get_text_size, render_cursor, render_scroll_bars, render_text, get_nearest_character_position,
 };
 use sdl2::{
     self,
@@ -14,7 +14,7 @@ use sdl2::{
     rect::{Rect, Point},
 };
 use native_dialog::{FileDialog, MessageDialog, MessageType};
-use tinyfiledialogs as tfd;
+use settings::{WINDOW_WIDTH, WINDOW_HEIGHT};
 use std::fs::File;
 use std::io::Read;
 
@@ -24,6 +24,9 @@ use std::time::{Duration, Instant};
 //TODO: Implement Insert Mode
 //TODO: Implement Copy and Paste
 //TODO: Implement loading and saving a file.
+//TODO: Check if contents are connected to a file path
+//TODO: Check if there are any changes made.
+//TODO: Click to move cursor
 //TODO: Implement changing font size
 
 pub fn main() {
@@ -34,9 +37,9 @@ pub fn main() {
     let ttf_context = sdl2::ttf::init().expect("Failed to initialize ttf context.");
 
     let window = video_subsystem
-        .window("Text Editor", 800, 600)
+        .window("Text Editor", WINDOW_WIDTH, WINDOW_HEIGHT)
         .position_centered()
-        .resizable()
+        // .resizable()
         .build()
         .expect("Failed to build window");
 
@@ -54,8 +57,8 @@ pub fn main() {
 
     let mut buffer = gap_buffer::GapBuffer::new(1024);
 
-    let mut viewport_width = 800;
-    let mut viewport_height = 600;
+    let mut viewport_width = WINDOW_WIDTH;
+    let mut viewport_height = WINDOW_HEIGHT;
     let mut viewport = Rect::new(0, 0, viewport_width, viewport_height);
     canvas.set_viewport(Some(viewport));
 
@@ -102,6 +105,9 @@ pub fn main() {
                         dragging_scroll_bar_vertical = true;
                     } else if horizontal_scroll_bar.contains_point(Point::new(x, y)) {
                         dragging_scroll_bar_horizontal = true;
+                    } else {
+                        let cursor_index = get_nearest_character_position(&font, &buffer.to_string(), x, y);
+                        buffer.move_cursor(cursor_index);
                     }
                 }
                 Event::MouseButtonUp { .. } => {

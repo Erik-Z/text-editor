@@ -171,3 +171,38 @@ pub fn get_text_size(text: &str, font: &Font) -> (u32, u32) {
     }
     (text_width, text_height)
 }
+
+pub fn get_nearest_character_position(font: &Font, text: &str, x: i32, y: i32) -> usize {
+    let lines: Vec<&str> = text.split('\n').collect();
+    let mut nearest_char_index = 0;
+    let mut current_index = 0;
+
+    let line_height = font.height() as i32;
+
+    // Find the nearest line based on the y-coordinate
+    let line_index = (y / line_height).clamp(0, lines.len() as i32 - 1) as usize;
+    let line = lines[line_index];
+
+    for (char_index, _) in line.char_indices() {
+        let (left, _) = line.split_at(char_index);
+        let char_x = font.size_of(left).unwrap().0 as i32;
+
+        if char_x > x {
+            nearest_char_index = current_index + char_index;
+            break;
+        }
+    }
+
+    // If the click was beyond the last character in the line, move the cursor to the end of the line
+    if nearest_char_index == 0 {
+        nearest_char_index = current_index + line.chars().count();
+    }
+
+    for idx in 0..line_index {
+        current_index += lines[idx].chars().count() + 1;
+    }
+
+    nearest_char_index += current_index;
+    nearest_char_index
+}
+

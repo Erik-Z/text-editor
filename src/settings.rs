@@ -4,3 +4,6 @@ pub static debug_mode: bool = true;
 
 pub static SCROLL_BAR_WIDTH: u32 = 10;
 pub static SCROLL_BAR_HEIGHT: u32 = 10;
+
+pub static WINDOW_WIDTH: u32 = 1600;
+pub static WINDOW_HEIGHT: u32 = 1200;
