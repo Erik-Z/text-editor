@@ -68,6 +68,10 @@ pub fn main() {
 
     let mut event_pump = sdl_context.event_pump().unwrap();
 
+    let mut file_path_for_content = None;
+    let mut has_file_been_saved = false;
+    let mut file_name = String::new();;
+
     let mut cursor_visible = true;
     let mut last_cursor_blink = Instant::now();
 
@@ -106,7 +110,7 @@ pub fn main() {
                     } else if horizontal_scroll_bar.contains_point(Point::new(x, y)) {
                         dragging_scroll_bar_horizontal = true;
                     } else {
-                        let cursor_index = get_nearest_character_position(&font, &buffer.to_string(), x, y);
+                        let cursor_index = get_nearest_character_position(&font, &buffer.to_string(), x + scroll_x, y + scroll_y);
                         buffer.move_cursor(cursor_index);
                     }
                 }
@@ -137,12 +141,14 @@ pub fn main() {
                     if buffer.length() > 0 {
                         buffer.insert('\n');
                     }
+                    has_file_been_saved = false;
                 }
                 Event::KeyDown {
                     keycode: Some(Keycode::Backspace),
                     ..
                 } => {
                     buffer.remove();
+                    has_file_been_saved = false;
                 }
                 Event::KeyDown {
                     keycode: Some(Keycode::Delete),
@@ -230,6 +236,7 @@ pub fn main() {
                     for _ in 0..settings::tab_width {
                         buffer.insert(' ');
                     }
+                    has_file_been_saved = false;
                 }
                 Event::KeyDown {
                     keycode: Some(keycode),
@@ -237,14 +244,14 @@ pub fn main() {
                     ..
                 } => {
                     if keycode == Keycode::O && keymod.contains(sdl2::keyboard::Mod::LCTRLMOD) {
-                        let path = FileDialog::new()
+                        file_path_for_content = FileDialog::new()
                             .set_location("~/Desktop")
                             .add_filter("Text Documents", &["txt"])
                             .add_filter("All Documents", &["*"])
                             .show_open_single_file()
                             .expect("Failed to get file path.");
 
-                        if let Some(path) = path {
+                        if let Some(path) = file_path_for_content {
                             let mut file = match File::open(&path) {
                                 Ok(file) => file,
                                 Err(e) => {
@@ -257,12 +264,19 @@ pub fn main() {
                                 eprintln!("Unable to read file: {:?}", e);
                                 continue;
                             }
-                
+
+                            file_name = path
+                                .file_name()
+                                .and_then(|os_str| os_str.to_str())
+                                .map(|str| str.to_string()).unwrap();
+
+
                             // Clear the buffer and insert the file's contents
                             buffer.clear();
                             for c in contents.chars() {
                                 buffer.insert(c);
                             }
+                            has_file_been_saved = true;
                         }
                     }
                 }
@@ -288,6 +302,7 @@ pub fn main() {
                     text,
                 } => {
                     buffer.insert(text.chars().next().unwrap());
+                    has_file_been_saved = false;
                 }
                 _ => {}
             }
@@ -302,6 +317,13 @@ pub fn main() {
 
         canvas.set_draw_color(Color::RGB(0, 0, 0));
         canvas.clear();
+
+        if file_name == String::new(){
+            canvas.window_mut().set_title(&format!("{}{}", &"Untitled", if has_file_been_saved {&""} else {&"*"})).unwrap();
+        } else {
+            canvas.window_mut().set_title(&format!("{}{}", &file_name, if has_file_been_saved {&""} else {&"*"})).unwrap();
+        }
+        
 
         render_text(&mut canvas, &font, &buffer.to_string(), scroll_x, scroll_y);
 
