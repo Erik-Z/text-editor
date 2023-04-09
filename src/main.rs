@@ -15,9 +15,9 @@ use sdl2::{
 };
 use native_dialog::{FileDialog, MessageDialog, MessageType};
 use settings::{WINDOW_WIDTH, WINDOW_HEIGHT};
-use std::fs::File;
+use std::{fs::File, io::Write};
 use std::io::Read;
-
+use std::env;
 use std::time::{Duration, Instant};
 
 //TODO: Implement Delete Method
@@ -70,7 +70,8 @@ pub fn main() {
 
     let mut file_path_for_content = None;
     let mut has_file_been_saved = false;
-    let mut file_name = String::new();;
+    let mut file_name = String::new();
+    let mut file: Option<File> = None;
 
     let mut cursor_visible = true;
     let mut last_cursor_blink = Instant::now();
@@ -277,6 +278,44 @@ pub fn main() {
                                 buffer.insert(c);
                             }
                             has_file_been_saved = true;
+                        }
+                    }
+                    else if keycode == Keycode::S && keymod.contains(sdl2::keyboard::Mod::LCTRLMOD) {
+                        if file.is_some() {
+                            // Save the buffer content to the existing file
+                            file.as_mut().unwrap().write(buffer.to_string().as_bytes())
+                                .expect("Could not save to file");
+                            has_file_been_saved = true;
+                        } else {
+                            // No file is opened, show the file dialog to create a new file
+                            let current_dir = env::current_dir().unwrap();
+                            file_path_for_content = FileDialog::new()
+                                .add_filter("Text files", &["txt", "md"])
+                                .add_filter("All files", &["*"])
+                                .set_location(current_dir.as_path())
+                                .set_filename("new.txt")
+                                .show_save_single_file()
+                                .expect("Failed to open dialogue");
+                    
+                            if let Some(path) = file_path_for_content {
+                                file = match File::create(&path) {
+                                    Ok(file) => Some(file),
+                                    Err(e) => {
+                                        eprintln!("Unable to open file: {:?}", e);
+                                        continue;
+                                    }
+                                };
+                    
+                                file_name = path
+                                    .file_name()
+                                    .and_then(|os_str| os_str.to_str())
+                                    .map(|str| str.to_string()).unwrap();
+                    
+                                file.as_mut().unwrap().write_all(buffer.to_string().as_bytes())
+                                    .expect("Could not save to file");
+                    
+                                has_file_been_saved = true;
+                            }
                         }
                     }
                 }
